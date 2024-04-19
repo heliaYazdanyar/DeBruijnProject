@@ -28,6 +28,8 @@ class ItemBuilder:
         list_rep = np.rint(np.random.uniform(1, limit, size=num_items, ))
         return list_rep
 
+    # in this function there are multiple random functions to
+    # produce frequencies
     def list_of_repetitions(num_items):
         np.random.seed()
         # ## normal distribution
@@ -58,11 +60,3 @@ class Item:
         self.binary_repr = binary_repr
         self.time_stamp = time_stamp
 
-    def set_node(self, node):
-        return
-
-    def push_up(self, net,  node):
-        return
-
-    def push_down(self, net, node):
-        return

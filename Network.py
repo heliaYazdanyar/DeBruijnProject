@@ -26,6 +26,7 @@ class Network:
         self.binary_len = log_num_nodes
         self.num_nodes = 2 ** log_num_nodes
         self.global_routing = global_routing
+        self.node_cap = node_cap
 
         # nodes
         self.nodes = [Node(f"{i:0{log_num_nodes}b}", index=i) for i in range(self.num_nodes)]
@@ -318,8 +319,97 @@ class Network:
             cnt += 1
         return cnt
 
+    def item_next_path_arashALG(self, item, host):
+        item_binary = item.binary_repr
+        cnt = 1
+        root = self._find_root_node(item_binary)
+
+        if root == host:
+            if item_binary[self.binary_len] == 0:
+                return root, root.left
+            else:
+                return root,  root.right
+
+        # routing
+        if item_binary[self.binary_len] == 0:
+            curr_node = root.left
+        else:
+            curr_node = root.right
+
+        index = 1
+        total_index = 1
+        cnt += 1
+        curr_root = root
+
+        while True:
+            if index == 0:  # going in the new Tree
+                curr_root = curr_node
+
+            if cnt > len(item_binary) - self.binary_len:
+                print("no empty node in Tree cnt=", cnt)
+                return curr_root, None
+
+            if curr_node == host:
+                if item_binary[self.binary_len + total_index] == 0:
+                    return curr_root, curr_node.left
+                else:
+                    return curr_root, curr_node.right
+
+            else:  # this part uses binary representation to find path (left or right) !!!
+                s = (self.binary_len + total_index)
+                cnt += 1
+                if item_binary[s] == 0:
+                    curr_node = curr_node.left
+                else:
+                    curr_node = curr_node.right
+            total_index += 1
+            index = (index + 1) % len(item_binary)
+            cnt += 1
+        return None, None
+
+    def find_item_host_arashALG(self, item):
+        item_binary = item.binary_repr
+        cnt = 1
+        root = self._find_root_node(item_binary)
+
+        if root.contains_item(item):
+            return root, 1
+
+        # routing
+        if item_binary[self.binary_len] == 0:
+            curr_node = root.left
+        else:
+            curr_node = root.right
+
+        index = 1
+        total_index = 1
+        cnt += 1
+        curr_root = root
+
+        while True:
+            if index == 0:  # going in the new Tree
+                curr_root = curr_node
+
+            if cnt > len(item_binary) - self.binary_len:
+                return None, -1
+
+            if  curr_node.contains_item(item):
+                return curr_node, cnt
+
+            else:  # this part uses binary representation to find path (left or right) !!!
+                s = (self.binary_len + total_index)
+                cnt += 1
+                if item_binary[s] == 0:
+                    curr_node = curr_node.left
+                else:
+                    curr_node = curr_node.right
+            total_index += 1
+            index = (index + 1) % len(item_binary)
+            cnt += 1
+        return None, -1
+
     def copy(self):
-        copy = Network(self.log_num_nodes, self.node_cap, self.global_routing)
+        copy = Network(self.binary_len, self.node_cap, self.global_routing)
         for i in range(0, self.num_nodes):
             copy.nodes[i].items = self.nodes[i].items
         return copy

@@ -1,6 +1,7 @@
 import random
 import numpy as np
 
+
 class Node:
     capacity = 0
     neighbors = []
@@ -21,18 +22,22 @@ class Node:
         self.index = index
         self.fraction_space = np.zeros(2 ** len(binary_repr))
 
-
     def is_full(self):
         return len(self.items) >= self.capacity
 
     def __str__(self):
         return f"Node({self.binary_repr}, items={self.items})"
 
+    # handling items
+    def remove_item(self, item):
+        self.items.remove(item)
+        return
+
     def add_item(self, item):
         self.items.append(item)
         return
 
-    # handling neighbors
+    # handling neighbors (children)
     def set_left(self, leftNode):
         self.left = leftNode
         self.neighbors.append(leftNode)
@@ -49,11 +54,7 @@ class Node:
             return True
         return False
 
-    # online functions
-    def remove_item(self, item):
-        self.items.remove(item)
-        return
-
+    # TODO
     def get_oldest_item(self):
         return
 
@@ -87,8 +88,7 @@ class Node:
         self.fraction_space[src_index] -= 1
         return
 
-    # global routing
-
+    # global routing TODO
     def add_to_global_table(self, item, host):
         return
 

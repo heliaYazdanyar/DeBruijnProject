@@ -6,7 +6,7 @@ from Network import Network
 class OnlineAdjustment:
 
     def Arash_fractional_access(network, item):
-        # making a copy in order it failed
+        # making a copy in case it failed
         network_copy = network.copy()
 
         item_binary = item.binary_repr
@@ -19,12 +19,11 @@ class OnlineAdjustment:
             return cost
 
         # item not in src
-        host = network.find_item_host(item)
+        host, initial_level = network.find_item_host_arashALG(item)
         if host is None:
             print("ERROR = Item has not been allocated")
             return network.num_nodes
 
-        initial_level = network.arash_path_distance(root, host)
         host.remove_item(item)
 
         # root adds the item
@@ -39,7 +38,7 @@ class OnlineAdjustment:
                 break
             level += 1
             cost += OnlineAdjustment.push_down_one_level_fractional(network, curr_node, 1)
-
+            print("Pushdown")
             if cost >= math.inf:
                 print("Pushdown failed. Trying again...")
                 OnlineAdjustment.Arash_fractional_access(network_copy, item)
@@ -54,10 +53,10 @@ class OnlineAdjustment:
 
         curr_node = node
 
-        root, next_node = network.item_next_path(item, curr_node)
+        root, next_node = network.item_next_path_arashALG(item, curr_node)
 
-        if not curr_node.fraction_is_full(root.index):
-            curr_node.add_item(item)
+        if not next_node.fraction_is_full(root.index):
+            next_node.add_item(item)
             return counter
         else:
             counter += 1

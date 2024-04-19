@@ -1,8 +1,9 @@
-import random
 import numpy as np
-from static import Allocation
 
 
+# With Bounded Loads (WBL) Model
+
+# Nodes in WBL
 class WBL_Node:
     capacity = 0
     neighbors = []
@@ -10,16 +11,14 @@ class WBL_Node:
     binary_repr = ""
     index = -1
 
-    # for global routing
-    global_table = {}
-
     def __init__(self, binary_length,  index, capacity=4):
-        self.items = []
+        self.items = [] # list of items (object)
         self.capacity = capacity
         self.binary_length = binary_length
         self.neighbors = []
         self.child = None
         self.index = index
+        # binary representation of a node is the conversion of its decimal index to binary representation
         self.binary_repr = self.decimalToBinary(index)
 
     def decimalToBinary(self, number):
@@ -78,6 +77,7 @@ class WBL_Network:
     def all_dist(self):
         self.server_distances = np.zeros((self.num_nodes, self.num_nodes))
 
+        # distance of two nodes in WBL is calculated with their indexes
         for i in range(0, self.num_nodes):
             for j in range(0, self.num_nodes):
                 self.server_distances[i][j] = (j - i + self.num_nodes) % self.num_nodes
