@@ -1,3 +1,4 @@
+import math
 import random
 import numpy as np
 
@@ -21,6 +22,15 @@ class Node:
         self.right = None
         self.index = index
         self.fraction_space = np.zeros(2 ** len(binary_repr))
+        self.prop_fraction_space = np.zeros(2 ** len(binary_repr))
+        self.src_items = set()
+
+    def add_src_item(self, item_binary):
+        self.src_items.add(item_binary)
+        return
+
+    def get_proportion(self):
+        return len(self.src_items)
 
     def is_full(self):
         return len(self.items) >= self.capacity
@@ -66,10 +76,11 @@ class Node:
     # fractional
     def allocate_space(self, src_index, dist):
         fraction = 2 ** (2 * dist - 1)
-        space = int(self.capacity / fraction)
+        space = math.ceil(self.capacity / fraction)
         # print("distace from ", self.index, " to ", src_index, " is=", dist)
         # print("allocated space from ", self.index, " to ", src_index, " is=", space)
         self.fraction_space[src_index] = space
+        # print("Node ", self.index, "allocated= ", space, " to src ", src_index)
         return
 
     def pick_remaining_space(self, index):
@@ -86,6 +97,21 @@ class Node:
     def fractional_add_item(self, src_index, item):
         self.items.append(item)
         self.fraction_space[src_index] -= 1
+        return
+
+    # proportional
+    def allocate_prop_fractional(self, src_index, dist, proportion):
+        fraction = 2 ** (2 * dist - 1)
+        space = math.ceil(self.capacity / fraction) * proportion
+        self.prop_fraction_space[src_index] = space
+        return
+
+    def prop_fraction_is_full(self, src_index):
+        return not (self.prop_fraction_space[src_index] > 0)
+
+    def prop_fractional_add_item(self, src_index, item):
+        self.items.append(item)
+        self.prop_fraction_space[src_index] -= 1
         return
 
     # global routing TODO

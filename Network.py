@@ -17,16 +17,14 @@ from Items import ItemBuilder
 
 
 class Network:
-    num_nodes = 0
-    nodes = []
-    binary_len = 0
-    server_distances = []
 
     def __init__(self, log_num_nodes, node_cap, global_routing):
         self.binary_len = log_num_nodes
         self.num_nodes = 2 ** log_num_nodes
         self.global_routing = global_routing
         self.node_cap = node_cap
+        self.proportions = []
+        self.server_distances = []
 
         # nodes
         self.nodes = [Node(f"{i:0{log_num_nodes}b}", index=i) for i in range(self.num_nodes)]
@@ -41,7 +39,7 @@ class Network:
 
         # other initializing
         self.all_dist()
-        self.allocation_fractional_space()
+        self.allocate_proportional_fractional_space()
         return
 
     # distance of nodes
@@ -209,6 +207,77 @@ class Network:
 
     #  ---- fractional allocation
 
+    # proportional
+
+    def set_proportions(self, all_items):
+        for i in range(0, len(all_items)):
+            item = all_items[i]
+            root = self._find_root_node(item.binary_repr)
+            root.add_src_item(item.binary_repr)
+        return
+
+    def allocate_proportional_fractional_space(self):
+        max_dist = int(math.log2(self.num_nodes))
+        for d in range(0, max_dist):
+            # M = matrix_power(self.server_distances, d)
+            for i in range(0, self.num_nodes):
+                curr_node = self.nodes[i]
+                for j in range(0, self.num_nodes):
+                    if self.server_distances[i][j] == d:
+                        prop = self.nodes[j].get_proportion()
+                        curr_node.allocate_prop_fractional(j, d, prop)
+                # print("Allocated space for ", curr_node.index, " is ", curr_node.prop_fraction_space)
+
+        # each nodes occupies the free space for its own items
+        for i in range(0, self.num_nodes):
+            self.nodes[i].pick_remaining_space(i)
+        return
+
+    def find_place_proportional_arash_tree_fractional(self, item):
+        item_binary = item.binary_repr
+        cnt = 1
+        root = self._find_root_node(item_binary)
+
+        if not root.prop_fraction_is_full(root.index):
+            root.prop_fractional_add_item(root.index, item)
+            return cnt
+
+        # routing
+        if item_binary[self.binary_len] == 0:
+            curr_node = root.left
+        else:
+            curr_node = root.right
+
+        index = 1
+        total_index = 1
+        cnt += 1
+        curr_root = root
+
+        while True:
+            if index == 0:  # going in the new Tree
+                curr_root = curr_node
+
+            if cnt > len(item_binary) - self.binary_len:
+                print("no empty node in Tree cnt=", cnt)
+                return self.num_nodes
+
+            if not curr_node.prop_fraction_is_full(curr_root.index):
+                curr_node.prop_fractional_add_item(curr_root.index, item)
+                print("allocated lower than root")
+                return cnt
+
+            else:  # this part uses binary representation to find path (left or right) !!!
+                s = (self.binary_len + total_index)
+                cnt += 1
+                if item_binary[s] == 0:
+                    curr_node = curr_node.left
+                else:
+                    curr_node = curr_node.right
+            total_index += 1
+            index = (index + 1) % len(item_binary)
+            cnt += 1
+        return cnt
+
     # fractional functions
     def allocation_fractional_space(self):
         max_dist = int(math.log2(self.num_nodes))
@@ -219,6 +288,7 @@ class Network:
                 for j in range(0, self.num_nodes):
                     if self.server_distances[i][j] == d:
                         curr_node.allocate_space(j, d)
+                # print("Allocated space for ", curr_node.index, " is ", curr_node.fraction_space)
 
         # each nodes occupies the free space for its own items
         for i in range(0, self.num_nodes):
@@ -267,6 +337,7 @@ class Network:
             cnt += 1
         return cnt
 
+
     # Algorithm
     # binary repr of the item is (nlog(n)) long
     # finds root and goes threw the tree
@@ -295,7 +366,7 @@ class Network:
         curr_root = root
 
         while True:
-            if index == 0: # going in the new Tree
+            if index == 0:  # going in the new Tree
                 curr_root = curr_node
 
             if cnt > len(item_binary) - self.binary_len:

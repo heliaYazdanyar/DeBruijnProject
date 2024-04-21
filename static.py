@@ -46,8 +46,22 @@ class Allocation:
         sorted_arr = sorted(sigma, key=lambda x: x[1], reverse=True)
         m = len(rep)
         for i in range(0, m):
+            print("Item number ", i, " is being allocated.")
             item = sorted_arr[i][0]
             distance = network.find_place_arash_tree_fractional(item)
+            cost += sorted_arr[i][1] * distance
+        return cost
+
+    # proportional-fractional - Arash Alg
+    def arash_prop_Tree_algorithm(network, list_of_items, rep):
+        cost = 0
+        sigma = Allocation.build_tuple(list_of_items, rep)
+        sorted_arr = sorted(sigma, key=lambda x: x[1], reverse=True)
+        m = len(rep)
+        for i in range(0, m):
+            # print("Item number ", i, " is being allocated.")
+            item = sorted_arr[i][0]
+            distance = network.find_place_proportional_arash_tree_fractional(item)
             cost += sorted_arr[i][1] * distance
         return cost
 
