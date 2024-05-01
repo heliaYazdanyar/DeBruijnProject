@@ -104,6 +104,8 @@ class Node:
         fraction = 2 ** (2 * dist - 1)
         space = math.ceil(self.capacity / fraction) * proportion
         self.prop_fraction_space[src_index] = space
+        print(self.prop_fraction_space)
+        print("-------------")
         return
 
     def prop_fraction_is_full(self, src_index):

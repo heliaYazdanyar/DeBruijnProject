@@ -231,6 +231,20 @@ class Network:
         # each nodes occupies the free space for its own items
         for i in range(0, self.num_nodes):
             self.nodes[i].pick_remaining_space(i)
+
+        # scaling the proportions to capacity
+        sum = 0
+        for i in range(0, self.num_nodes):
+            print(self.nodes[i].prop_fraction_space)
+            sum += np.sum(self.nodes[i].prop_fraction_space)
+
+        print(sum)
+        cap = self.node_cap
+        for i in range(0, self.num_nodes):
+            node = self.nodes[i]
+            for j in range(0, self.num_nodes):
+                node.prop_fraction_space[j] = (node.prop_fraction_space[j] * cap / sum)
+
         return
 
     def find_place_proportional_arash_tree_fractional(self, item):
@@ -337,7 +351,6 @@ class Network:
             cnt += 1
         return cnt
 
-
     # Algorithm
     # binary repr of the item is (nlog(n)) long
     # finds root and goes threw the tree
@@ -399,7 +412,7 @@ class Network:
             if item_binary[self.binary_len] == 0:
                 return root, root.left
             else:
-                return root,  root.right
+                return root, root.right
 
         # routing
         if item_binary[self.binary_len] == 0:
@@ -464,7 +477,7 @@ class Network:
             if cnt > len(item_binary) - self.binary_len:
                 return None, -1
 
-            if  curr_node.contains_item(item):
+            if curr_node.contains_item(item):
                 return curr_node, cnt
 
             else:  # this part uses binary representation to find path (left or right) !!!
