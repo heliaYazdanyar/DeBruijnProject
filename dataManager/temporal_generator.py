@@ -2,7 +2,7 @@ import random
 import json
 import os
 from math import log2
-from params import param
+from dataManager.params import param
 
 single = True       # single source data (no src-dst)
 
@@ -307,8 +307,9 @@ def mod_temp_seq():
 
 
 # start the code
-if os.path.exists("data/temp_file_processed"+"_mod_n"+str(param.n_items)+"_m"+str(param.size_dataset)+".json"):
-   pass
+if os.path.exists(
+        "data/temp_file_processed" + "_mod_n" + str(param.n_items) + "_m" + str(param.size_dataset) + ".json"):
+    pass
 else:
     print(f"Creating temporal sequence for n_hosts: {param.n_items} and size_dataset: {param.size_dataset}")
     create_original()
@@ -316,3 +317,4 @@ else:
     mod_temp_seq()
     os.remove("data/temp_p_original.json")
     os.remove("data/temp_file_processed.json")
+

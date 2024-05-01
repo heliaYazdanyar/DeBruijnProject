@@ -1,19 +1,8 @@
-import random
-import hashlib
-import networkx as nx
-import matplotlib.pyplot as plt
-from itertools import product
 import numpy as np
 from queue import Queue
 import math
-import time
-from numpy.linalg import matrix_power
 from Node import Node
-from Items import ItemBuilder
-
-
-# TODO
-# 2- adjusting items in main cycle
+from numpy.linalg import matrix_power
 
 
 class Network:
@@ -39,7 +28,6 @@ class Network:
 
         # other initializing
         self.all_dist()
-        self.allocate_proportional_fractional_space()
         return
 
     # distance of nodes
@@ -97,6 +85,7 @@ class Network:
             path.reverse()
         return flag, len(path)
 
+    # cycle
     def cycle_shortestPath(self, src_node, dst_node):
         return abs(src_node.index - dst_node.index)
 
@@ -165,9 +154,6 @@ class Network:
 
         return cnt
 
-    def find_place_global_routing(self, item):
-        return
-
     # finding items
     def find_item_host(self, item):
         item_binary = item.binary_repr
@@ -175,7 +161,7 @@ class Network:
         root = self._find_root_node(item_binary)
 
         if root.contains_item(item):
-            return root
+            return root, cnt
 
         if item_binary[self.binary_len] == 0:
             curr_node = root.left
@@ -188,11 +174,11 @@ class Network:
             # if local routing was full --- second implementation TODO
             if index_i == 0:
                 print("local routing full")
-                return None
+                return None, -1
 
             # local routing
             if curr_node.contains_item(item):
-                return curr_node
+                return curr_node, cnt
 
             else:  # this part uses binary representation to find path (left or right) !
                 s = (self.binary_len + index_i) % len(item_binary)
@@ -204,6 +190,52 @@ class Network:
             index_i = (index_i + 1) % len(item_binary)
             cnt += 1
         return
+
+    def item_next_path_normal(self, item, host):
+        item_binary = item.binary_repr
+        cnt = 1
+        root = self._find_root_node(item_binary)
+
+        if root == host:
+            if item_binary[self.binary_len] == 0:
+                return root.left
+            else:
+                return root.right
+
+        # routing
+        if item_binary[self.binary_len] == 0:
+            curr_node = root.left
+        else:
+            curr_node = root.right
+
+        index = 1
+        cnt += 1
+        while True:
+            # if local routing was full
+            if index == 0:
+                cycle_counter = self.item_in_cycle(root, item)
+                if cycle_counter == -1:
+                    print("no empty node left")
+                    return 10000 + cnt
+                else:
+                    return cnt + cycle_counter
+
+            # local routing
+            if curr_node == host:
+                if item_binary[self.binary_len + index] == 0:
+                    return curr_node.left
+                else:
+                    return curr_node.right
+            else:  # this part uses binary representation to find path (left or right) !
+                s = (self.binary_len + index) % len(item_binary)
+                if item_binary[s] == 0:
+                    curr_node = curr_node.left
+                else:
+                    curr_node = curr_node.right
+
+            index = (index + 1) % len(item_binary)
+            cnt += 1
+        return None
 
     #  ---- fractional allocation
 
@@ -235,10 +267,8 @@ class Network:
         # scaling the proportions to capacity
         sum = 0
         for i in range(0, self.num_nodes):
-            print(self.nodes[i].prop_fraction_space)
             sum += np.sum(self.nodes[i].prop_fraction_space)
 
-        print(sum)
         cap = self.node_cap
         for i in range(0, self.num_nodes):
             node = self.nodes[i]
@@ -254,7 +284,7 @@ class Network:
 
         if not root.prop_fraction_is_full(root.index):
             root.prop_fractional_add_item(root.index, item)
-            return cnt
+            return cnt, 0
 
         # routing
         if item_binary[self.binary_len] == 0:
@@ -272,13 +302,13 @@ class Network:
                 curr_root = curr_node
 
             if cnt > len(item_binary) - self.binary_len:
-                print("no empty node in Tree cnt=", cnt)
-                return self.num_nodes
+                # print("ERROR! no empty node in Tree cnt=", cnt)
+                return self.num_nodes, 1
 
             if not curr_node.prop_fraction_is_full(curr_root.index):
                 curr_node.prop_fractional_add_item(curr_root.index, item)
-                print("allocated lower than root")
-                return cnt
+                # print("allocated lower than root")
+                return cnt, 0
 
             else:  # this part uses binary representation to find path (left or right) !!!
                 s = (self.binary_len + total_index)
@@ -290,9 +320,9 @@ class Network:
             total_index += 1
             index = (index + 1) % len(item_binary)
             cnt += 1
-        return cnt
+        return cnt, 0
 
-    # fractional functions
+    # fractional-related functions
     def allocation_fractional_space(self):
         max_dist = int(math.log2(self.num_nodes))
         for d in range(0, max_dist):
@@ -309,6 +339,7 @@ class Network:
             self.nodes[i].pick_remaining_space(i)
         return
 
+    # fractional Algorithm
     def find_place_fractional(self, item):
         item_binary = item.binary_repr
         cnt = 1
@@ -351,21 +382,19 @@ class Network:
             cnt += 1
         return cnt
 
-    # Algorithm
-    # binary repr of the item is (nlog(n)) long
-    # finds root and goes threw the tree
-    # if tree ends, we set the last leaf as new root to continue searching for
-    # empty place
-    # TODO : Do we look in the spaces related to fractional of the new root or old root?
-
+    # Arash-Fractional Algorithm
     def find_place_arash_tree_fractional(self, item):
+        """   Arash Algorithm:
+        binary repr of the item is (nlog(n)) long,
+        1- find root and goes threw the tree
+        2- if tree ends, we set the last leaf as new root to continue searching for empty place"""
         item_binary = item.binary_repr
-        cnt = 1
         root = self._find_root_node(item_binary)
 
+        cnt = 1
         if not root.fraction_is_full(root.index):
             root.fractional_add_item(root.index, item)
-            return cnt
+            return cnt, 0
 
         # routing
         if item_binary[self.binary_len] == 0:
@@ -383,13 +412,13 @@ class Network:
                 curr_root = curr_node
 
             if cnt > len(item_binary) - self.binary_len:
-                print("no empty node in Tree cnt=", cnt)
-                return self.num_nodes
+                # print("ERROR! no empty node in Tree-- searched in ", cnt, "servers")
+                return self.num_nodes, 1
 
             if not curr_node.fraction_is_full(curr_root.index):
                 curr_node.fractional_add_item(curr_root.index, item)
-                print("allocated lower than root")
-                return cnt
+                # print("allocated lower than root")
+                return cnt, 0
 
             else:  # this part uses binary representation to find path (left or right) !!!
                 s = (self.binary_len + total_index)
@@ -401,7 +430,7 @@ class Network:
             total_index += 1
             index = (index + 1) % len(item_binary)
             cnt += 1
-        return cnt
+        return cnt, 1
 
     def item_next_path_arashALG(self, item, host):
         item_binary = item.binary_repr
@@ -492,8 +521,80 @@ class Network:
             cnt += 1
         return None, -1
 
+    # greedy-related functions
+    def level_greedy_ckeck(self, level, item_binary):
+        cnt = 1
+
+        root = self._find_root_node(item_binary)
+        if not root.is_full():
+            return cnt, root
+
+        if item_binary[self.binary_len] == 0:
+            curr_node = root.left
+        else:
+            curr_node = root.right
+
+        binary_index = self.binary_len
+        cnt += 1
+        while True:
+
+            if binary_index == 0:
+                cycle_counter = self.item_in_cycle(root, item_binary)
+                if cycle_counter == -1:
+                    print("no empty node left")
+                    return 10000 + cnt, None
+                else:
+                    return cnt + cycle_counter, None
+
+            if not curr_node.is_full():
+                return cnt, curr_node
+
+            else:  # this part uses binary representation to find path (left or right) !!!
+                binary_index = (binary_index + 1) % len(item_binary)
+                cnt += 1
+                if (item_binary[binary_index] == 0):
+                    curr_node = curr_node.left
+                else:
+                    curr_node = curr_node.right
+
+        return cnt, curr_node
+
+    def simple_greedy_first_step(self, item_binary):
+        cnt = 1
+        root = self._find_root_node(item_binary)
+        if not root.is_full():
+            root.add_item(item_binary)
+            return cnt
+        else:
+            return -1
+
+    # network utility
+    def empty_network(self):
+        for node in self.nodes:
+            node.remove_allItems()
+        return
+
     def copy(self):
         copy = Network(self.binary_len, self.node_cap, self.global_routing)
         for i in range(0, self.num_nodes):
             copy.nodes[i].items = self.nodes[i].items
         return copy
+
+    # old- proportional fractional functions
+    # def allocation_fractional_space(self, freqNode):
+    #     max_dist = int(math.log2(self.num_nodes))
+    #     for d in range(0, max_dist):
+    #         M = matrix_power(self.server_distances, d)
+    #         for i in range(0, self.num_nodes):
+    #             curr_node = self.nodes[i]
+    #             for j in range(0, self.num_nodes):
+    #                 if M[i][j] > 0:
+    #                     curr_node.allocate_space(j, d, freqNode[j])
+    #
+    #     for i in range(0, self.num_nodes):
+    #         if freqNode[i] > 0:
+    #             self.nodes[i].pick_remaining_space(i)
+    #     return
+
+    # def find_place_global_routing(self, item):
+    #     return

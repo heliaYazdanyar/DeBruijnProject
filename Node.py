@@ -35,6 +35,11 @@ class Node:
     def is_full(self):
         return len(self.items) >= self.capacity
 
+    # recycle
+    def remove_allItems(self):
+        self.items = []
+        return
+
     def __str__(self):
         return f"Node({self.binary_repr}, items={self.items})"
 
@@ -104,8 +109,8 @@ class Node:
         fraction = 2 ** (2 * dist - 1)
         space = math.ceil(self.capacity / fraction) * proportion
         self.prop_fraction_space[src_index] = space
-        print(self.prop_fraction_space)
-        print("-------------")
+        # print(self.prop_fraction_space)
+        # print("-------------")
         return
 
     def prop_fraction_is_full(self, src_index):
