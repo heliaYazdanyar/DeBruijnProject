@@ -39,6 +39,15 @@ def run_setup(log_numNodes, num_items, global_routing, additive_flag, factor, lo
     return net, wbl_network, node_cap
 
 
+def temporal_data(p, all_items, prev_item):
+    coin = random.random()
+    if coin < p:
+        return prev_item
+    else:
+        rand_index = random.randint(0, len(all_items))
+        return all_items[rand_index]
+
+
 def static_allocation_DeBruijn(method, net, items, frequency_of_items):
     if method == "greedyFreeForAll":
         cost = Allocation.greedy_free_for_all(net, items, frequency_of_items)
@@ -65,6 +74,10 @@ def static_allocation_DeBruijn(method, net, items, frequency_of_items):
         net.allocation_fractional_space()
         cost = Allocation.fractional_allocation(net, items, frequency_of_items)
         print("DeBruijn Fractional Static allocation cost = ", cost)
+
+    elif method == "CnA":
+        cost = Allocation.CnA_algorithm(net, items, frequency_of_items)
+        print("DeBruijn Chen and Arash Static allocation cost = ", cost)
     else:
         cost = 0
 
@@ -78,6 +91,8 @@ def single_test_online(method, net, item):
         res = OnlineAdjustment.Arash_fractional_access(net, item)
     elif method == "Fractional":  # TODO: Needs Debugging
         res = OnlineAdjustment.fractional_access(net, item)
+    elif method == "CnA":
+        res = OnlineAdjustment.CnA_access(net, item)
     else:
         res = 0
     return res
@@ -128,7 +143,7 @@ list_items, frequencies = get_data(False, long_binary_item=True, node_cap=node_c
 # print("WBL static allocation cost is = ", cost_of_wbl)
 
 'static- allocate items in DeBruijn'
-'------ options for method = {"greedyFreeForAll", "Chen", "LevelByLevel, "Arash", "Fractional", "Prop-Arash"}'
+'------ options for method = {"greedyFreeForAll", "Chen", "LevelByLevel, "CnA", "Arash", "Fractional", "Prop-Arash"}'
 
 # string_method = "greedyFreeForAll"
 # cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
@@ -141,21 +156,26 @@ list_items, frequencies = get_data(False, long_binary_item=True, node_cap=node_c
 # string_method = "LevelByLevel"
 # cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
 # network.empty_network()
-
-string_method = "Arash"
-cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
+#
+# string_method = "Arash"
+# cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
 # network.empty_network()
-
+#
 # string_method = "Prop-Arash"
 # cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
 # network.empty_network()
-
+#
 # string_method = "Fractional"
 # cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
 # network.empty_network()
 
-# Testing  Online Adjustments
+string_method = "CnA"
+cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
+# network.empty_network()
+
+
+"""Testing  Online Adjustments"""
+"""------ options for method = {"normal, "Arash", "Fractional", "CnA"}"""
 num_requests = 100
-# ------ options for method = {"normal, "Arash", "Fractional"}
-cost_online = run_online("Arash", num_requests, network, list_items)
+cost_online = run_online("CnA", num_requests, network, list_items)
 

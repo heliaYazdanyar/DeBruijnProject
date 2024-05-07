@@ -23,6 +23,7 @@ class Node:
         self.index = index
         self.fraction_space = np.zeros(2 ** len(binary_repr))
         self.prop_fraction_space = np.zeros(2 ** len(binary_repr))
+        self.CnA_fraction_space = np.zeros(2 ** len(binary_repr))
         self.src_items = set()
 
     def add_src_item(self, item_binary):
@@ -119,6 +120,33 @@ class Node:
     def prop_fractional_add_item(self, src_index, item):
         self.items.append(item)
         self.prop_fraction_space[src_index] -= 1
+        return
+
+    # CnA fractional
+    def CnA_first_allocation(self, network):
+        for item in self.items:
+            root = network._find_root_node(item)
+            self.CnA_fraction_space[root.index] += 1
+        return
+
+    def CnA_remaining_allocation(self, network):
+        self.capacity = math.ceil(self.capacity * (3/2))
+        remaining_space = self.capacity - len(self.items)
+        for i in range(0, network.num_nodes):
+            dist = network.server_distances[self.index][i]
+            fraction = 2 ** (2 * dist - 1)
+            c = math.ceil(remaining_space / fraction)
+            self.CnA_fraction_space[i] += c
+        return
+
+    def CnA_fraction_is_full(self, src_index):
+        if self.CnA_fraction_space[src_index] > 0:
+            return False
+        return True
+
+    def CnA_fractional_add_item(self, src_index, item):
+        self.items.append(item)
+        self.fraction_space[src_index] -= 1
         return
 
     # global routing TODO

@@ -238,6 +238,11 @@ class Network:
         return None
 
     #  ---- fractional allocation
+    def set_CnA_fractions(self):
+        for node in self.nodes:
+            node.CnA_first_allocation(self)
+            node.CnA_remaining_allocation(self)
+        return
 
     # proportional
 
@@ -485,7 +490,7 @@ class Network:
         cnt = 1
         root = self._find_root_node(item_binary)
 
-        if root.contains_item(item):
+        if root.contains_item(item_binary):
             return root, 1
 
         # routing
@@ -494,19 +499,14 @@ class Network:
         else:
             curr_node = root.right
 
-        index = 1
         total_index = 1
         cnt += 1
-        curr_root = root
 
         while True:
-            if index == 0:  # going in the new Tree
-                curr_root = curr_node
-
             if cnt > len(item_binary) - self.binary_len:
                 return None, -1
 
-            if curr_node.contains_item(item):
+            if curr_node.contains_item(item_binary):
                 return curr_node, cnt
 
             else:  # this part uses binary representation to find path (left or right) !!!
@@ -517,9 +517,7 @@ class Network:
                 else:
                     curr_node = curr_node.right
             total_index += 1
-            index = (index + 1) % len(item_binary)
             cnt += 1
-        return None, -1
 
     # greedy-related functions
     def level_greedy_ckeck(self, level, item_binary):

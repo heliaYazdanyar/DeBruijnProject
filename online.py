@@ -61,35 +61,6 @@ class OnlineAdjustment:
             counter += 1
             return OnlineAdjustment.push_down_one_level(network, next_node, counter)
 
-    # def push_down_random_item(network, node):
-    #     index = random.randint(0, len(node.items)-1)
-    #     item = node.items[index]
-    #     return OnlineAdjustment.push_down(network, item, node)
-    #
-    # def push_down(network, item, node):
-    #     cnt = 0
-    #     item_binary = item.binary_repr
-    #     curr_node = node
-    #     index = 1
-    #     while True:
-    #         # next node
-    #         s = (network.binary_len + index) % len(item_binary)
-    #         if item_binary[s] == 0:
-    #             curr_node = curr_node.left
-    #             cnt += 1
-    #         else:
-    #             curr_node = curr_node.right
-    #             cnt += 1
-    #
-    #         if not curr_node.is_full():
-    #             curr_node.add_item(item)
-    #             return cnt
-    #
-    #         # if in cycle
-    #         if index == 0:
-    #             return -1
-    #         index = (index + 1) % len(item_binary)
-
     # Arash online Algorithm
     def Arash_fractional_access(network, item):
         # making a copy in case it failed
@@ -141,11 +112,68 @@ class OnlineAdjustment:
         root, next_node = network.item_next_path_arashALG(item, curr_node)
 
         if not next_node.fraction_is_full(root.index):
-            next_node.add_item(item)
+            next_node.fractional_add_item(item)
             return counter
         else:
             counter += 1
             return OnlineAdjustment.push_down_one_level_fractional(network, next_node, counter)
+
+    # CnA online Algorithm
+    def CnA_access(network, item):
+        # making a copy in case it failed
+        network_copy = network.copy()
+
+        item_binary = item.binary_repr
+        root = network._find_root_node(item_binary)
+        cost = 1
+
+        # item is already in src
+        if root.contains_item(item):
+            return cost
+
+        # item not in src
+        host, initial_level = network.find_item_host_arashALG(item)
+        if host is None:
+            print("ERROR = Item has not been allocated")
+            return network.num_nodes
+
+        host.remove_item(item.binary_repr)
+
+        # root adds the item
+        root.add_item(item)
+        curr_node = root
+
+        cost = 1
+        level = 1
+
+        while True:
+            if level == initial_level:
+                break
+            level += 1
+            cost += OnlineAdjustment.CnA_push_down_one_level(network, curr_node, 1)
+            print("Pushdown")
+            if cost >= math.inf:
+                print("Pushdown failed. Trying again...")
+                OnlineAdjustment.Arash_fractional_access(network_copy, item)
+
+        return cost
+
+    def CnA_push_down_one_level(network, node, counter):
+        if counter > 2 * node.capacity:
+            return math.inf
+        index = random.randint(0, len(node.items) - 1)
+        item = node.items[index]
+
+        curr_node = node
+
+        root, next_node = network.item_next_path_arashALG(item, curr_node)
+
+        if not next_node.CnA_fraction_is_full(root.index):
+            next_node.CnA_fractional_add_item(item)
+            return counter
+        else:
+            counter += 1
+            return OnlineAdjustment.CnA_push_down_one_level(network, next_node, counter)
 
     # TODO ?
     def push_up_one_level_fraction(network, node, counter):
@@ -269,4 +297,34 @@ class OnlineAdjustment:
                     print("stuck in while-", "cap=", root.capacity, "limit = ", -1.61/math.log10(1-1/root.capacity))
                     break
         return
+
+    # def push_down_random_item(network, node):
+    #     index = random.randint(0, len(node.items)-1)
+    #     item = node.items[index]
+    #     return OnlineAdjustment.push_down(network, item, node)
+    #
+    # def push_down(network, item, node):
+    #     cnt = 0
+    #     item_binary = item.binary_repr
+    #     curr_node = node
+    #     index = 1
+    #     while True:
+    #         # next node
+    #         s = (network.binary_len + index) % len(item_binary)
+    #         if item_binary[s] == 0:
+    #             curr_node = curr_node.left
+    #             cnt += 1
+    #         else:
+    #             curr_node = curr_node.right
+    #             cnt += 1
+    #
+    #         if not curr_node.is_full():
+    #             curr_node.add_item(item)
+    #             return cnt
+    #
+    #         # if in cycle
+    #         if index == 0:
+    #             return -1
+    #         index = (index + 1) % len(item_binary)
+
 

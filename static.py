@@ -154,6 +154,15 @@ class Allocation:
             errors += errors_flag
         return cost, errors
 
+    # Chen and Arash Algorithm
+    def CnA_algorithm(network, list_of_items, rep):
+        # running Chen's algorithm
+        cost = Allocation.Chen_greedy(network, list_of_items, rep)
+        # allocating fractions
+        network.set_CnA_fractions()
+        return cost
+
+    # WBL
     def WBL_static_allocation(wbl_network, list_of_items, rep):
         cost = 0
         sigma = Allocation.build_tuple(list_of_items, rep)
