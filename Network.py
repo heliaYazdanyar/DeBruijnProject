@@ -490,7 +490,7 @@ class Network:
         cnt = 1
         root = self._find_root_node(item_binary)
 
-        if root.contains_item(item_binary):
+        if root.contains_item(item):
             return root, 1
 
         # routing
@@ -506,7 +506,7 @@ class Network:
             if cnt > len(item_binary) - self.binary_len:
                 return None, -1
 
-            if curr_node.contains_item(item_binary):
+            if curr_node.contains_item(item):
                 return curr_node, cnt
 
             else:  # this part uses binary representation to find path (left or right) !!!
@@ -557,11 +557,12 @@ class Network:
 
         return cnt, curr_node
 
-    def simple_greedy_first_step(self, item_binary):
+    def simple_greedy_first_step(self, item):
+        item_binary = item.binary_repr
         cnt = 1
         root = self._find_root_node(item_binary)
         if not root.is_full():
-            root.add_item(item_binary)
+            root.add_item(item)
             return cnt
         else:
             return -1
@@ -576,6 +577,14 @@ class Network:
         copy = Network(self.binary_len, self.node_cap, self.global_routing)
         for i in range(0, self.num_nodes):
             copy.nodes[i].items = self.nodes[i].items
+            copy.nodes[i].capacity = self.nodes[i].capacity
+            copy.nodes[i].neighbors = self.nodes[i].neighbors
+            copy.nodes[i].left = self.nodes[i].left
+            copy.nodes[i].right = self.nodes[i].right
+            copy.nodes[i].fraction_space = self.nodes[i].fraction_space
+            copy.nodes[i].prop_fraction_space = self.nodes[i].prop_fraction_space
+            copy.nodes[i].CnA_fraction_space = self.nodes[i].CnA_fraction_space
+            copy.nodes[i].src_items = self.nodes[i].src_items
         return copy
 
     # old- proportional fractional functions

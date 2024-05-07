@@ -68,7 +68,7 @@ class OnlineAdjustment:
 
         item_binary = item.binary_repr
         root = network._find_root_node(item_binary)
-        cost = 0
+        cost = 1
 
         # item is already in src
         if root.contains_item(item):
@@ -80,7 +80,7 @@ class OnlineAdjustment:
             print("ERROR = Item has not been allocated")
             return network.num_nodes
 
-        host.remove_item(item)
+        host.remove_item_fractional(network, item.binary_repr)
 
         # root adds the item
         root.add_item(item)
@@ -112,6 +112,7 @@ class OnlineAdjustment:
         root, next_node = network.item_next_path_arashALG(item, curr_node)
 
         if not next_node.fraction_is_full(root.index):
+            node.remove_item_fractional(network, item.binary_repr)
             next_node.fractional_add_item(item)
             return counter
         else:
@@ -137,13 +138,12 @@ class OnlineAdjustment:
             print("ERROR = Item has not been allocated")
             return network.num_nodes
 
-        host.remove_item(item.binary_repr)
+        host.CnA_remove_item(network, item.binary_repr)
 
         # root adds the item
         root.add_item(item)
         curr_node = root
 
-        cost = 1
         level = 1
 
         while True:
@@ -154,7 +154,7 @@ class OnlineAdjustment:
             print("Pushdown")
             if cost >= math.inf:
                 print("Pushdown failed. Trying again...")
-                OnlineAdjustment.Arash_fractional_access(network_copy, item)
+                OnlineAdjustment.CnA_access(network_copy, item)
 
         return cost
 
@@ -169,6 +169,7 @@ class OnlineAdjustment:
         root, next_node = network.item_next_path_arashALG(item, curr_node)
 
         if not next_node.CnA_fraction_is_full(root.index):
+            curr_node.CnA_remove_item(network, item.binary_repr)
             next_node.CnA_fractional_add_item(item)
             return counter
         else:

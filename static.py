@@ -25,7 +25,7 @@ class Allocation:
         # first level allocation
         for i in range(0, m):
             item = sorted_arr[i][0]
-            check = network.simple_greedy_first_step(item.binary_repr)
+            check = network.simple_greedy_first_step(item)
             if check == 1:
                 cost += sorted_arr[i][1]
             else:

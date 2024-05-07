@@ -4,6 +4,7 @@ from static import Allocation
 from online import OnlineAdjustment
 from Items import ItemBuilder
 from WBL import WBL_Network
+import matplotlib.pyplot as plt
 
 
 def run_setup(log_numNodes, num_items, global_routing, additive_flag, factor, long_binary_item=True):
@@ -44,7 +45,7 @@ def temporal_data(p, all_items, prev_item):
     if coin < p:
         return prev_item
     else:
-        rand_index = random.randint(0, len(all_items))
+        rand_index = random.randint(0, len(all_items)-1)
         return all_items[rand_index]
 
 
@@ -98,17 +99,21 @@ def single_test_online(method, net, item):
     return res
 
 
-def run_online(method, number_of_requests, net, items):
+def run_online(method, number_of_requests, net, items, p):
     access_list = []
     arr = []
     cost_sum = 0
 
+    item_index = random.randint(0, len(list_items) - 1)
+    prev_item = items[item_index]
     for i in range(0, number_of_requests):
-        item_index = random.randint(0, len(list_items) - 1)
-        adj_cost = single_test_online(method, network, list_items[item_index])
+        item = temporal_data(p, items, prev_item)
+        # item_index = random.randint(0, len(list_items) - 1)
+        # item = items[item_index]
+        adj_cost = single_test_online(method, net, item)
         cost_sum += adj_cost
         arr.append(adj_cost)
-        access_list.append(list_items[item_index].binary_repr)
+        access_list.append(item.binary_repr)
 
     print("Total online cost for ", num_requests, " requests is ", cost_sum)
     return cost_sum
@@ -131,8 +136,8 @@ def get_data(real, long_binary_item, node_cap, log_numNodes):
 ' parameters of network and setup '
 logn = 6
 num_items = (2 ** logn) * 10
-additive = False
-factor = 2
+additive = True
+factor = 5
 network, wbl_net, node_cap = run_setup(logn, num_items, global_routing=False, additive_flag=additive, factor=factor)
 
 'frequency of items for static allocation'
@@ -176,6 +181,14 @@ cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, 
 
 """Testing  Online Adjustments"""
 """------ options for method = {"normal, "Arash", "Fractional", "CnA"}"""
-num_requests = 100
-cost_online = run_online("CnA", num_requests, network, list_items)
+num_requests = 200
+p_arr = [0.1, 0.5, 0.6, 0.7]
+res = []
 
+for p in p_arr:
+    net_copy = network.copy()
+    cost_online = run_online("CnA", num_requests, net_copy, list_items, p)
+    res.append(cost_online)
+
+plt.plot(p_arr, res)
+plt.show()

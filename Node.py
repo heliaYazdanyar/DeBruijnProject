@@ -105,6 +105,12 @@ class Node:
         self.fraction_space[src_index] -= 1
         return
 
+    def remove_item_fractional(self, network, item):
+        root = network._find_root_node(item)
+        self.items.remove(item)
+        self.fraction_space[root.index] -= 1
+        return
+
     # proportional
     def allocate_prop_fractional(self, src_index, dist, proportion):
         fraction = 2 ** (2 * dist - 1)
@@ -125,7 +131,7 @@ class Node:
     # CnA fractional
     def CnA_first_allocation(self, network):
         for item in self.items:
-            root = network._find_root_node(item)
+            root = network._find_root_node(item.binary_repr)
             self.CnA_fraction_space[root.index] += 1
         return
 
@@ -146,9 +152,14 @@ class Node:
 
     def CnA_fractional_add_item(self, src_index, item):
         self.items.append(item)
-        self.fraction_space[src_index] -= 1
+        self.CnA_fraction_space[src_index] -= 1
         return
 
+    def CnA_remove_item(self, network, item):
+        root = network._find_root_node(item)
+        self.items.remove(item)
+        self.CnA_fraction_space[root.index] -= 1
+        return
     # global routing TODO
     def add_to_global_table(self, item, host):
         return
