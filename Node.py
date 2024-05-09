@@ -150,15 +150,16 @@ class Node:
             return False
         return True
 
-    def CnA_fractional_add_item(self, src_index, item):
+    def CnA_fractional_add_item(self,network, item):
+        root = network._find_root_node(item.binary_repr)
         self.items.append(item)
-        self.CnA_fraction_space[src_index] -= 1
+        self.CnA_fraction_space[root.index] -= 1
         return
 
     def CnA_remove_item(self, network, item):
-        root = network._find_root_node(item)
+        root = network._find_root_node(item.binary_repr)
         self.items.remove(item)
-        self.CnA_fraction_space[root.index] -= 1
+        self.CnA_fraction_space[root.index] += 1
         return
     # global routing TODO
     def add_to_global_table(self, item, host):

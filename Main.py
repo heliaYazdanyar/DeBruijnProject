@@ -137,7 +137,7 @@ def get_data(real, long_binary_item, node_cap, log_numNodes):
 logn = 6
 num_items = (2 ** logn) * 10
 additive = True
-factor = 5
+factor = 3
 network, wbl_net, node_cap = run_setup(logn, num_items, global_routing=False, additive_flag=additive, factor=factor)
 
 'frequency of items for static allocation'
@@ -181,7 +181,7 @@ cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, 
 
 """Testing  Online Adjustments"""
 """------ options for method = {"normal, "Arash", "Fractional", "CnA"}"""
-num_requests = 200
+num_requests = 50
 p_arr = [0.1, 0.5, 0.6, 0.7]
 res = []
 

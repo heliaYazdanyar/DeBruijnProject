@@ -245,7 +245,6 @@ class Network:
         return
 
     # proportional
-
     def set_proportions(self, all_items):
         for i in range(0, len(all_items)):
             item = all_items[i]
@@ -442,7 +441,7 @@ class Network:
         cnt = 1
         root = self._find_root_node(item_binary)
 
-        if root == host:
+        if root.contains_item(item):
             if item_binary[self.binary_len] == 0:
                 return root, root.left
             else:

@@ -112,7 +112,7 @@ class OnlineAdjustment:
         root, next_node = network.item_next_path_arashALG(item, curr_node)
 
         if not next_node.fraction_is_full(root.index):
-            node.remove_item_fractional(network, item.binary_repr)
+            node.remove_item_fractional(network, item)
             next_node.fractional_add_item(item)
             return counter
         else:
@@ -138,7 +138,7 @@ class OnlineAdjustment:
             print("ERROR = Item has not been allocated")
             return network.num_nodes
 
-        host.CnA_remove_item(network, item.binary_repr)
+        host.CnA_remove_item(network, item)
 
         # root adds the item
         root.add_item(item)
@@ -165,12 +165,11 @@ class OnlineAdjustment:
         item = node.items[index]
 
         curr_node = node
-
         root, next_node = network.item_next_path_arashALG(item, curr_node)
 
         if not next_node.CnA_fraction_is_full(root.index):
-            curr_node.CnA_remove_item(network, item.binary_repr)
-            next_node.CnA_fractional_add_item(item)
+            curr_node.CnA_remove_item(network, item)
+            next_node.CnA_fractional_add_item(network, item)
             return counter
         else:
             counter += 1
