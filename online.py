@@ -3,6 +3,45 @@ import math
 
 
 class OnlineAdjustment:
+    # global access
+    def global_access(network, item):
+        root = network._find_root_node(item.binary_repr)
+        if root.contains_item(item):
+            return 1
+
+        for i in range(0, network.num_nodes):
+            if network.global_all_items[i].contains(item):
+                path = network.shortest_path(root, network.nodes[i])
+                root.add_item(item)
+                return OnlineAdjustment.global_one_level_push_down(network, 1, path, 0)
+        return network.num_nodes
+
+    def global_one_level_push_down(network, counter, path, node_index):
+        if node_index > len(path):
+            print("ERROR- Wrong path in global routing!")
+            return None
+        node = path[node_index]
+        index = random.randint(0, len(node.items) - 1)
+        item = node.items[index]
+        next_node = path[node_index + 1]
+
+        if not next_node.is_full():
+            node.remove_item(network, item)
+            next_node.add_item(item)
+            return counter
+        else:
+            counter += 1
+            node_index += 1
+            return OnlineAdjustment.global_one_level_push_down(network, counter, path, node_index)
+
+    def global_static_access(network, item):
+        root = network._find_root_node(item.binary_repr)
+        for i in range(0, network.num_nodes):
+            if item in network.global_all_items[i]:
+                path = network.shortest_path(root, network.nodes[i])
+                return len(path)
+        return network.num_nodes
+
     # WBL
     def wbl_access(wbl_net, item):
         return wbl_net.access(item)
@@ -109,7 +148,8 @@ class OnlineAdjustment:
         return cost
 
     def push_down_one_level_fractional(network, node, counter):
-        if counter > 2 * node.capacity:
+        if counter > 2 * network.num_nodes:
+            print("Strange ERROR")
             return math.inf
         index = random.randint(0, len(node.items) - 1)
         item = node.items[index]
@@ -351,4 +391,7 @@ class OnlineAdjustment:
     #             return -1
     #         index = (index + 1) % len(item_binary)
 
+
+
+##
 

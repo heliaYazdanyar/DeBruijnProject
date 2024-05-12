@@ -9,9 +9,7 @@ class Node:
     items = []
     binary_repr = ""
     index = -1
-
-    # for global routing
-    global_table = {}
+    network = None
 
     def __init__(self, binary_repr, capacity=4, index=-1):
         self.binary_repr = binary_repr
@@ -28,6 +26,10 @@ class Node:
 
     def add_src_item(self, item_binary):
         self.src_items.add(item_binary)
+        return
+
+    def set_network(self, net):
+        self.network = net
         return
 
     def get_proportion(self):
@@ -47,10 +49,12 @@ class Node:
     # handling items
     def remove_item(self, item):
         self.items.remove(item)
+        self.network.global_all_items[self.index].remove(item)
         return
 
     def add_item(self, item):
         self.items.append(item)
+        self.network.global_all_items[self.index].append(item)
         return
 
     # handling neighbors (children)
@@ -69,10 +73,6 @@ class Node:
         if item in self.items:
             return True
         return False
-
-    # TODO
-    def get_oldest_item(self):
-        return
 
     def get_random_item(self):
         t = len(self.items)
@@ -162,12 +162,7 @@ class Node:
         self.items.remove(item)
         self.CnA_fraction_space[root.index] += 1
         return
-    # global routing TODO
-    def add_to_global_table(self, item, host):
-        return
 
-    def remove_from_global_table(self, item):
-        return
-
-    def check_global_table(self, item):
+  # TODO
+    def get_oldest_item(self):
         return

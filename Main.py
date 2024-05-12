@@ -97,6 +97,8 @@ def single_test_online(method, net, item):
         res = OnlineAdjustment.fractional_access(net, item)
     elif method == "CnA":
         res = OnlineAdjustment.CnA_access(net, item)
+    elif method == "global":
+        res = OnlineAdjustment.global_access(net, item)
     else:
         res = 0
     return res
@@ -108,6 +110,8 @@ def single_test_static(method, net, item):
         res = OnlineAdjustment.static_normal_access(net, item)
     elif method == "CnA":
         res = OnlineAdjustment.CnA_access_static(net, item)
+    elif method == "global":
+        res = OnlineAdjustment.global_static_access(net, item)
     else:
         res = 0
     return res
@@ -172,27 +176,35 @@ def plot_1(wbl_res, stat_res, local_CnA, temporal_locality):
 
 
 # Second Plot
-def run_2(number_of_requests, CnA_net, items, p):
+def run_2(number_of_requests, CnA_net, free_for_all_net, items, p):
     cna_sum = 0
     static_sum = 0
+    global_online_sum = 0
+    global_static = 0
     network_copy = CnA_net.copy()
+    free_for_all_copy = free_for_all_net.copy()
 
     item_index = random.randint(0, len(list_items) - 1)
     prev_item = items[item_index]
     for i in range(0, number_of_requests):
         item = temporal_data(p, items, prev_item)
+        # C and A
         cna_sum += single_test_online("CnA", CnA_net, item)
         static_sum += single_test_static("CnA", network_copy, item)
-        # TODO : Global : L-DACH
+        # global
+        global_online_sum += single_test_online("global", CnA_net, item)
+        global_static += single_test_static("global", free_for_all_copy, item)
 
-    print("Total online cost for ", num_requests, " requests is ", cna_sum)
-    return cna_sum/static_sum
+    print("Total online cost of CnA for", num_requests, " requests is ", cna_sum)
+    print("Total online cost of Global for", num_requests, " requests is ", global_online_sum)
+
+    return cna_sum/static_sum, global_online_sum/global_static
 
 
 def plot_2(cna_res, global_res, temporal_locality):
     fig = plt.figure(figsize=(3, 6))
     plt.plot(temporal_locality, cna_res, color="green", label='Online G-DACH')
-    # plt.plot(temporal_locality, global_res, color="blue", label='Online L-DACH')
+    plt.plot(temporal_locality, global_res, color="blue", label='Online L-DACH')
     plt.title(f'Different Algorithms')
     plt.xlabel("Temporal Locality")
     plt.ylabel("Access Cost/ Static Cost")
@@ -218,12 +230,9 @@ def get_data(real, long_binary_item, node_cap, log_numNodes):
 
 
 # Plotting functions
-
-
-
 ' parameters of network and setup '
 logn = 6
-num_items = (2 ** logn) * 100
+num_items = (2 ** logn) * 1000
 additive = True
 factor = 5
 network, wbl_net, node_cap = run_setup(logn, num_items, global_routing=False, additive_flag=additive, factor=factor)
@@ -234,6 +243,7 @@ list_items, frequencies = get_data(False, long_binary_item=True, node_cap=node_c
 network_chen = network.copy()
 network_Arash = network.copy()
 network_CnA = network.copy()
+network_global = network.copy()
 
 'static- allocate items in WBL'
 cost_of_wbl = Allocation.WBL_static_allocation(wbl_net, list_items, frequencies)
@@ -242,8 +252,8 @@ print("WBL static allocation cost is = ", cost_of_wbl)
 'static- allocate items in DeBruijn'
 '------ options for method = {"greedyFreeForAll", "Chen", "LevelByLevel, "CnA", "Arash", "Fractional", "Prop-Arash"}'
 start_time = time.time()
-# string_method = "greedyFreeForAll"
-# cost_of_static = static_allocation_DeBruijn(string_method, network, list_items, frequencies)
+string_method = "greedyFreeForAll"
+cost_of_static = static_allocation_DeBruijn(string_method, network_global, list_items, frequencies)
 # network.empty_network()
 #
 string_method = "Chen"
@@ -309,14 +319,16 @@ global_online = []
 repeats = 2
 for p in p_arr:
     result = 0
-    online = 0
-    static = 0
+    cna_run = 0
+    global_run = 0
     wbl = 0
     for r in range(0, repeats):
         net_copy = network_CnA.copy()
-        cost_online = run_2(num_requests, net_copy, list_items, p)
-        online += cost_online
-    cna_online.append(online/repeats)
+        cost_online, cost_global = run_2(num_requests, net_copy, network_global, list_items, p)
+        cna_run += cost_online
+        global_run += cost_global
+    cna_online.append(cna_run/repeats)
+    global_online.append(global_run/repeats)
 
 # print("Time for All Onlines=", time.time()-start_time)
 plot_2(cna_online, global_online, p_arr)

@@ -3,6 +3,7 @@ from queue import Queue
 import math
 from Node import Node
 from numpy.linalg import matrix_power
+from itertools import repeat
 
 
 class Network:
@@ -25,9 +26,13 @@ class Network:
             node.set_left(_left_neighbor)
             node.set_right(_right_neighbor)
             node.capacity = node_cap
+            node.set_network(self)
 
         # other initializing
         self.all_dist()
+
+        # global setting
+        self.global_all_items = [[] for i in repeat(None, self.num_nodes)]
         return
 
     # distance of nodes
@@ -85,6 +90,45 @@ class Network:
             path.reverse()
         return flag, len(path)
 
+    def shortest_path(self, src_node, dst_node):
+        if src_node.binary_repr == dst_node.binary_repr:
+            return True, 1
+
+        visited = set()
+        queue = Queue()
+        queue.put(src_node)
+        visited.add(src_node)
+
+        parent = dict()
+        parent[src_node.index] = None
+
+        flag = False
+        while not queue.empty():
+            current_node = queue.get()
+            if current_node.binary_repr == dst_node.binary_repr:
+                flag = True
+                break
+
+            for next_node in current_node.neighbors:
+                if next_node not in visited:
+                    queue.put(next_node)
+                    parent[next_node.index] = current_node
+                    visited.add(next_node)
+
+        # Path reconstruction
+        path = []
+        cnt = 0
+        if flag:
+            path.append(dst_node)
+            while parent[dst_node.index] is not None:
+                cnt += 1
+                path.append(parent[dst_node.index])
+                dst_node = parent[dst_node.index]
+                if cnt > self.num_nodes:
+                    return self.nodes.copy()
+            path.reverse()
+        return path
+
     # cycle
     def cycle_shortestPath(self, src_node, dst_node):
         return abs(src_node.index - dst_node.index)
@@ -103,6 +147,20 @@ class Network:
                 self.nodes[curr_index].add_item(item)
                 return counter
         return -1
+
+    def find_item_in_cycle(self, src_node, item):
+        curr_index = src_node.index
+        counter = 0
+        for i in range(0, len(self.nodes)):
+            # update index
+            curr_index += 1
+            counter += 1
+            curr_index = curr_index % len(self.nodes)
+
+            # place in node if possible
+            if self.nodes[curr_index].contains_item(item):
+                return self.nodes[curr_index], counter
+        return None, math.inf
 
     # finding place to allocate items
     def _find_root_node(self, hashed_value):
@@ -174,8 +232,9 @@ class Network:
         while True:
             # if local routing was full --- second implementation TODO
             if index_i == 0:
-                print("ERROR--- Item wasn't found in network-- (find item host)")
-                return None, -1
+                host, r = self.find_item_in_cycle(curr_node, item)
+                cnt += r
+                return host, cnt
 
             # local routing
             if curr_node.contains_item(item):
@@ -214,12 +273,9 @@ class Network:
         while True:
             # if local routing was full
             if index == 0:
-                cycle_counter = self.item_in_cycle(root, item)
-                if cycle_counter == -1:
-                    print("no empty node left")
-                    return 10000 + cnt
-                else:
-                    return cnt + cycle_counter
+                host, r = self.find_item_in_cycle(curr_node, item)
+                next_index = (host.index + 1) % self.num_nodes
+                return self.nodes[next_index]
 
             # local routing
             if curr_node == host:
@@ -256,8 +312,10 @@ class Network:
         while True:
             # if local routing was full --- second implementation TODO
             if index_i == 0:
-                print("ERROR--- Item wasn't found in network-- (static access)")
-                return self.num_nodes
+                print("Item found in cycle (static access)")
+                host, r = self.find_item_in_cycle(curr_node, item)
+                cnt += r
+                return cnt
 
             # local routing
             if curr_node.contains_item(item):
@@ -452,8 +510,9 @@ class Network:
                 curr_root = curr_node
 
             if cnt > len(item_binary) - self.binary_len:
-                # print("ERROR! no empty node in Tree-- searched in ", cnt, "servers")
-                return self.num_nodes, 1
+                # print("ERROR! no empty node in Tree-- searched in ", cnt, "servers", "item is being placed in cycle")
+                cnt += self.item_in_cycle(curr_node, item)
+                return cnt, 1
 
             if not curr_node.fraction_is_full(curr_root.index):
                 curr_node.fractional_add_item(curr_root.index, item)
@@ -472,6 +531,7 @@ class Network:
             cnt += 1
         return cnt, 1
 
+    # TODO: add cycle part to this function
     def item_next_path_arashALG(self, item, host):
         item_binary = item.binary_repr
         cnt = 1
@@ -539,7 +599,9 @@ class Network:
 
         while True:
             if cnt > len(item_binary) - self.binary_len:
-                return None, -1
+                host, r = self.find_item_in_cycle(curr_node, item)
+                cnt += r
+                return host, cnt
 
             if curr_node.contains_item(item):
                 return curr_node, cnt
@@ -610,6 +672,7 @@ class Network:
 
     def copy(self):
         copy = Network(self.binary_len, self.node_cap, self.global_routing)
+        copy.global_all_items = self.global_all_items.copy()
         for i in range(0, self.num_nodes):
             copy.nodes[i].items = self.nodes[i].items.copy()
             copy.nodes[i].capacity = self.nodes[i].capacity
@@ -620,23 +683,7 @@ class Network:
             copy.nodes[i].prop_fraction_space = self.nodes[i].prop_fraction_space.copy()
             copy.nodes[i].CnA_fraction_space = self.nodes[i].CnA_fraction_space.copy()
             copy.nodes[i].src_items = self.nodes[i].src_items.copy()
+            copy.nodes[i].set_network(copy)
         return copy
 
-    # old- proportional fractional functions
-    # def allocation_fractional_space(self, freqNode):
-    #     max_dist = int(math.log2(self.num_nodes))
-    #     for d in range(0, max_dist):
-    #         M = matrix_power(self.server_distances, d)
-    #         for i in range(0, self.num_nodes):
-    #             curr_node = self.nodes[i]
-    #             for j in range(0, self.num_nodes):
-    #                 if M[i][j] > 0:
-    #                     curr_node.allocate_space(j, d, freqNode[j])
-    #
-    #     for i in range(0, self.num_nodes):
-    #         if freqNode[i] > 0:
-    #             self.nodes[i].pick_remaining_space(i)
-    #     return
 
-    # def find_place_global_routing(self, item):
-    #     return

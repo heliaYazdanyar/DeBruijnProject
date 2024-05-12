@@ -137,7 +137,7 @@ class Allocation:
             distance, flag_error = network.find_place_arash_tree_fractional(item)
             cost += sorted_arr[i][1] * distance
             errors += flag_error
-        return cost , errors
+        return cost, errors
 
     # proportional-fractional - Arash Alg
     def arash_prop_Tree_algorithm(network, list_of_items, rep):
