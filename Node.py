@@ -136,7 +136,8 @@ class Node:
         return
 
     def CnA_remaining_allocation(self, network):
-        self.capacity = math.ceil(self.capacity * (3/2))
+        added_fraction_factor = 1.1
+        self.capacity = math.ceil(self.capacity * added_fraction_factor)
         remaining_space = self.capacity - len(self.items)
         for i in range(0, network.num_nodes):
             dist = network.server_distances[self.index][i]

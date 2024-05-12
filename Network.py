@@ -130,9 +130,10 @@ class Network:
         while True:
             # if local routing was full
             if index == 0:
+                print("GREEDY ALLOCATION- Item is being placed in cycle")
                 cycle_counter = self.item_in_cycle(root, item)
                 if cycle_counter == -1:
-                    print("no empty node left")
+                    print("GREEDY ALLOCATION- no empty node left")
                     return 10000 + cnt
                 else:
                     return cnt + cycle_counter
@@ -173,7 +174,7 @@ class Network:
         while True:
             # if local routing was full --- second implementation TODO
             if index_i == 0:
-                print("local routing full")
+                print("ERROR--- Item wasn't found in network-- (find item host)")
                 return None, -1
 
             # local routing
@@ -189,8 +190,8 @@ class Network:
 
             index_i = (index_i + 1) % len(item_binary)
             cnt += 1
-        return
 
+    # TODO:Check this one
     def item_next_path_normal(self, item, host):
         item_binary = item.binary_repr
         cnt = 1
@@ -236,6 +237,41 @@ class Network:
             index = (index + 1) % len(item_binary)
             cnt += 1
         return None
+
+    def static_access(self, item):
+        item_binary = item.binary_repr
+        cnt = 1
+        root = self._find_root_node(item_binary)
+
+        if root.contains_item(item):
+            return cnt
+
+        if item_binary[self.binary_len] == 0:
+            curr_node = root.left
+        else:
+            curr_node = root.right
+
+        index_i = 1
+        cnt += 1
+        while True:
+            # if local routing was full --- second implementation TODO
+            if index_i == 0:
+                print("ERROR--- Item wasn't found in network-- (static access)")
+                return self.num_nodes
+
+            # local routing
+            if curr_node.contains_item(item):
+                return cnt
+
+            else:  # this part uses binary representation to find path (left or right) !
+                s = (self.binary_len + index_i) % len(item_binary)
+                if item_binary[s] == 0:
+                    curr_node = curr_node.left
+                else:
+                    curr_node = curr_node.right
+
+            index_i = (index_i + 1) % len(item_binary)
+            cnt += 1
 
     #  ---- fractional allocation
     def set_CnA_fractions(self):
@@ -519,6 +555,16 @@ class Network:
             cnt += 1
 
     # greedy-related functions
+    def simple_greedy_first_step(self, item):
+        item_binary = item.binary_repr
+        cnt = 1
+        root = self._find_root_node(item_binary)
+        if not root.is_full():
+            root.add_item(item)
+            return cnt
+        else:
+            return -1
+
     def level_greedy_ckeck(self, level, item_binary):
         cnt = 1
 
@@ -556,16 +602,6 @@ class Network:
 
         return cnt, curr_node
 
-    def simple_greedy_first_step(self, item):
-        item_binary = item.binary_repr
-        cnt = 1
-        root = self._find_root_node(item_binary)
-        if not root.is_full():
-            root.add_item(item)
-            return cnt
-        else:
-            return -1
-
     # network utility
     def empty_network(self):
         for node in self.nodes:
@@ -575,15 +611,15 @@ class Network:
     def copy(self):
         copy = Network(self.binary_len, self.node_cap, self.global_routing)
         for i in range(0, self.num_nodes):
-            copy.nodes[i].items = self.nodes[i].items
+            copy.nodes[i].items = self.nodes[i].items.copy()
             copy.nodes[i].capacity = self.nodes[i].capacity
-            copy.nodes[i].neighbors = self.nodes[i].neighbors
-            copy.nodes[i].left = self.nodes[i].left
-            copy.nodes[i].right = self.nodes[i].right
-            copy.nodes[i].fraction_space = self.nodes[i].fraction_space
-            copy.nodes[i].prop_fraction_space = self.nodes[i].prop_fraction_space
-            copy.nodes[i].CnA_fraction_space = self.nodes[i].CnA_fraction_space
-            copy.nodes[i].src_items = self.nodes[i].src_items
+            copy.nodes[i].neighbors = self.nodes[i].neighbors.copy()
+            copy.nodes[i].left = copy.nodes[self.nodes[i].left.index]
+            copy.nodes[i].right = copy.nodes[self.nodes[i].right.index]
+            copy.nodes[i].fraction_space = self.nodes[i].fraction_space.copy()
+            copy.nodes[i].prop_fraction_space = self.nodes[i].prop_fraction_space.copy()
+            copy.nodes[i].CnA_fraction_space = self.nodes[i].CnA_fraction_space.copy()
+            copy.nodes[i].src_items = self.nodes[i].src_items.copy()
         return copy
 
     # old- proportional fractional functions

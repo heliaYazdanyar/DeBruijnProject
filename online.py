@@ -3,6 +3,13 @@ import math
 
 
 class OnlineAdjustment:
+    # WBL
+    def wbl_access(wbl_net, item):
+        return wbl_net.access(item)
+
+    # Static greedy access
+    def static_normal_access(network, item):
+        return network.static_access(item)
 
     # normal online access
     def normal_access(network, item):
@@ -120,6 +127,23 @@ class OnlineAdjustment:
             return OnlineAdjustment.push_down_one_level_fractional(network, next_node, counter)
 
     # CnA online Algorithm
+    def CnA_access_static(network, item):
+        item_binary = item.binary_repr
+        root = network._find_root_node(item_binary)
+        cost = 1
+
+        # item is already in src
+        if root.contains_item(item):
+            return cost
+
+        # item not in src
+        host, initial_level = network.find_item_host_arashALG(item)
+        if host is None:
+            print("ERROR = Item has not been allocated")
+            return network.num_nodes
+
+        return initial_level
+
     def CnA_access(network, item):
         # making a copy in case it failed
         network_copy = network.copy()

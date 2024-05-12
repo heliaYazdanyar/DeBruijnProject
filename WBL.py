@@ -119,6 +119,30 @@ class WBL_Network:
             cnt += 1
         return cnt
 
+    # greedy access
+    def access(self, item):
+        item_binary = item.binary_repr
+        cnt = 1
+        root = self._find_root_node(item_binary)
 
+        if root.contains_item(item):
+            return cnt
+
+        index = root.index
+        cnt += 1
+        curr_node = root.child
+        while True:
+            if cnt > self.num_nodes:
+                print("Network is full")
+
+            if curr_node.contains_item(item):
+                return cnt
+
+            else:
+                curr_node = curr_node.child
+
+            index = (index + 1) % len(item_binary)
+            cnt += 1
+        return cnt
 
 
