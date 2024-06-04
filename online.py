@@ -83,7 +83,6 @@ class OnlineAdjustment:
                 break
             level += 1
             cost += OnlineAdjustment.push_down_one_level(network, curr_node, 1)
-            print("Pushdown")
             if cost >= math.inf:
                 print("Pushdown failed. Trying again...")
                 OnlineAdjustment.normal_access(network_copy, item)
@@ -140,7 +139,6 @@ class OnlineAdjustment:
                 break
             level += 1
             cost += OnlineAdjustment.push_down_one_level_fractional(network, curr_node, 1)
-            print("Pushdown")
             if cost >= math.inf:
                 print("Pushdown failed. Trying again...")
                 OnlineAdjustment.Arash_fractional_access(network_copy, item)
@@ -215,7 +213,6 @@ class OnlineAdjustment:
                 break
             level += 1
             cost += OnlineAdjustment.CnA_push_down_one_level(network, curr_node, 1)
-            print("Pushdown")
             if cost >= math.inf:
                 print("Pushdown failed. Trying again...")
                 OnlineAdjustment.CnA_access(network_copy, item)

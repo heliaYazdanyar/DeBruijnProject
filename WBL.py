@@ -111,7 +111,6 @@ class WBL_Network:
             if not curr_node.is_full():
                 curr_node.add_item(item)
                 return cnt
-
             else:
                 curr_node = curr_node.child
 
@@ -133,7 +132,7 @@ class WBL_Network:
         curr_node = root.child
         while True:
             if cnt > self.num_nodes:
-                print("Network is full")
+                print("ٔNot in Network! (WBL-access)")
 
             if curr_node.contains_item(item):
                 return cnt

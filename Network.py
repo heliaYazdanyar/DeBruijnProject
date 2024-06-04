@@ -559,8 +559,10 @@ class Network:
                 curr_root = curr_node
 
             if cnt > len(item_binary) - self.binary_len:
-                print("no empty node in Tree cnt=", cnt)
-                return curr_root, None
+                print("searching in cycle", cnt)
+                host, r = self.find_item_in_cycle(curr_node, item)
+                index = (host.index + 1) % self.num_nodes
+                return curr_root, self.nodes[index]
 
             if curr_node == host:
                 if item_binary[self.binary_len + total_index] == 0:
